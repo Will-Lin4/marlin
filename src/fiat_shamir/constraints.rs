@@ -49,6 +49,12 @@ pub trait FiatShamirRngVar<F: PrimeField, CF: PrimeField, PFS: FiatShamirRng<F, 
         num: usize,
     ) -> Result<Vec<NonNativeFieldVar<F, CF>>, SynthesisError>;
 
+    /// Output field elements.
+    fn squeeze_bits(
+        &mut self,
+        num: usize,
+    ) -> Result<Vec<Boolean<CF>>, SynthesisError>;
+
     /// Output field elements and the corresponding bits (this can reduce repeated computation).
     #[allow(clippy::type_complexity)]
     fn squeeze_field_elements_and_bits(
@@ -228,6 +234,19 @@ impl<F: PrimeField, CF: PrimeField, PS: AlgebraicSponge<CF>, S: AlgebraicSpongeV
         }
 
         Ok(dest_bits)
+    }
+
+    /// Obtain random elements from hashchain gadget. (Not guaranteed to be uniformly distributed,
+    /// should only be used in certain situations.)
+    #[tracing::instrument(target = "r1cs", skip(sponge))]
+    pub fn get_bits_from_sponge(
+        sponge: &mut S,
+        num_bits: usize,
+    ) -> Result<Vec<Boolean<CF>>, SynthesisError> {
+        let mut bits = Self::get_booleans_from_sponge(sponge, num_bits)?;
+        bits.truncate(num_bits);
+        bits.reverse();
+        Ok(bits)
     }
 
     /// Obtain random elements from hashchain gadget. (Not guaranteed to be uniformly distributed,
@@ -415,6 +434,14 @@ impl<F: PrimeField, CF: PrimeField, PS: AlgebraicSponge<CF>, S: AlgebraicSpongeV
         num: usize,
     ) -> Result<Vec<NonNativeFieldVar<F, CF>>, SynthesisError> {
         Self::get_gadgets_from_sponge(&mut self.s, num, false)
+    }
+
+    #[tracing::instrument(target = "r1cs", skip(self))]
+    fn squeeze_bits(
+        &mut self,
+        num: usize,
+    ) -> Result<Vec<Boolean<CF>>, SynthesisError> {
+        Self::get_bits_from_sponge(&mut self.s, num)
     }
 
     #[tracing::instrument(target = "r1cs", skip(self))]

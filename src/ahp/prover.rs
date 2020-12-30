@@ -143,8 +143,6 @@ impl<F: PrimeField> AHPForR1CS<F> {
 
         assert!(pcs.is_satisfied().unwrap());
 
-        pcs.outline_lcs();
-
         let padding_time = start_timer!(|| "Padding matrices to make them square");
         make_matrices_square_for_prover(pcs.clone());
         end_timer!(padding_time);

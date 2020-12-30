@@ -122,7 +122,7 @@ impl<F: PrimeField> AHPForR1CS<F> {
         let padding_time = start_timer!(|| "Padding matrices to make them square");
         end_timer!(padding_time);
         let matrix_processing_time = start_timer!(|| "Processing matrices");
-        ics.outline_lcs();
+        ics.inline_all_lcs();
         make_matrices_square_for_indexer(ics.clone());
         let matrices = ics.to_matrices().expect("should not be `None`");
         let num_non_zero_val = num_non_zero::<F>(&matrices);
