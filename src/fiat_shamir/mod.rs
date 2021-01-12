@@ -19,7 +19,7 @@ pub mod poseidon;
 macro_rules! overhead {
     ($x:expr) => {{
         let num = $x;
-        let num_bits = num.into_repr().to_bits();
+        let num_bits = num.into_repr().to_bits_be();
         let mut skipped_bits = 0;
         for b in num_bits.iter() {
             if *b == false {
@@ -275,7 +275,7 @@ impl<F: PrimeField, CF: PrimeField, S: AlgebraicSponge<CF>> FiatShamirAlgebraicS
         let skip = (CF::Params::REPR_SHAVE_BITS + 1) as usize;
         for elem in src_elements.iter() {
             // discard the highest bit
-            let elem_bits = elem.into_repr().to_bits();
+            let elem_bits = elem.into_repr().to_bits_be();
             dest_bits.extend_from_slice(&elem_bits[skip..]);
         }
 
@@ -363,7 +363,7 @@ impl<F: PrimeField, CF: PrimeField, S: AlgebraicSponge<CF>> RngCore
 
         let mut bits = Vec::<bool>::new();
         for elem in elements.iter() {
-            let mut elem_bits = elem.into_repr().to_bits();
+            let mut elem_bits = elem.into_repr().to_bits_be();
             elem_bits.reverse();
             bits.extend_from_slice(&elem_bits[0..capacity]);
         }
@@ -433,7 +433,7 @@ impl<F: PrimeField, CF: PrimeField, S: AlgebraicSponge<CF>> FiatShamirRng<F, CF>
         }
         let elements = bits
             .chunks(capacity)
-            .map(|bits| CF::from_repr(CF::BigInt::from_bits(bits)).unwrap())
+            .map(|bits| CF::from_repr(CF::BigInt::from_bits_be(bits)).unwrap())
             .collect::<Vec<CF>>();
 
         self.s.absorb(&elements);
